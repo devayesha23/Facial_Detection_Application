@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Detection App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('https://media.licdn.com/dms/image/D4D12AQH244sF7zNOQg/article-cover_image-shrink_720_1280/0/1677540440296?e=2147483647&v=beta&t=Yxvs72KKoTR6aKpEHnGkqp5_KtoIvDxquV6g8u3VBHU');
+            background-size: cover;
+        }
+
+        #container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #uploadButton {
+            padding: 10px 20px;
+            background-color: #EF4A25;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #uploadButton:hover {
+            background-color: #ff704d;
+        }
+
+        #output canvas {
+            display: block;
+            margin: 20px auto;
+            border: 2px solid #EF4A25;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="content">
+            <h1>Face Detection App by Filestack</h1>
+            <button id="uploadButton">Upload Image</button>
+        </div>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const apiKey = 'A18L3T2eWRemxYIGwGlZsz';
+        const client = filestack.init(apiKey);
+
+        $('#uploadButton').click(function() {
+            const options = {
+                onUploadDone: function(res) {
+                    const fileUrl = res.filesUploaded[0].url;
+                    detectFaces(fileUrl);
+                },
+            };
+
+            const picker = client.picker(options);
+            picker.open();
+        });
+
+        function detectFaces(imageURL) {
+            const detectURL = `https://process.filestackapi.com/${apiKey}/detect_faces=export:true/${imageURL}`;
+
+            $.getJSON(detectURL, function(data) {
+                const outputCanvas = document.createElement("canvas");
+                const ctx = outputCanvas.getContext("2d");
+
+                const img = new Image();
+                img.onload = function() {
+                    outputCanvas.width = img.width;
+                    outputCanvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                    data.forEach(function(face, index) {
+                        ctx.strokeStyle = "#4CAF50"; // Border color
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(face.x, face.y, face.width, face.height);
+                    });
+
+                    document.getElementById("output").innerHTML = "";
+                    document.getElementById("output").appendChild(outputCanvas);
+                };
+                img.src = imageURL;
+            });
+        }
+    </script>
+</body>
+</html>
